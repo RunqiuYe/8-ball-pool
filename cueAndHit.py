@@ -119,6 +119,7 @@ class Ball:
         self.cy = cy
         self.vx = 0
         self.vy = 0
+        self.speed = 0
         self.point = Ball.pointDict[self.color] if color != "white" else -1
         self.radius = 5.3
 
@@ -127,8 +128,34 @@ class Ball:
         tableRight = app.tableCenterX + app.tableLength / 2
         tableTop = app.tableCenterY - app.tableWidth / 2
         tableBot = app.tableCenterY + app.tableWidth / 2
+
+        self.speed = (self.vx ** 2 + self.vy ** 2) ** 0.5
+
+        # Deceleration function
+        # Question: bound for almost equal? how to guarantee that it will stop?
+        # Current Solution: make sure the bound is larger than deceleration.
+        # =====================================================================
+        if (self.vx ** 2 + self.vy ** 2) ** 0.5 > 0.1:
+            deceleration = 0.5
+            decelerationX = - deceleration * self.vx / self.speed
+            decelerationY = - deceleration * self.vy / self.speed
+            self.vx += decelerationX
+            self.vy += decelerationY 
+        else:
+            self.vx = 0
+            self.vy = 0
+            deceleration = 0
+            decelerationX = 0
+            decelerationY = 0
+        
+        # Moving function
+        # =====================================================================
+        self.speed = (self.vx ** 2 + self.vy ** 2) ** 0.5
         self.cx += self.vx
         self.cy += self.vy
+
+        # Collision function
+        # =====================================================================
         if self.cx > tableRight - self.radius:
             self.cx = tableRight - self.radius
             self.vx = -self.vx
@@ -232,8 +259,8 @@ def takeStep(app):
 
 def onKeyPress(app, key):
     if key == "h":
-        app.whiteBall.vx = 5
-        app.whiteBall.vy = -3
+        app.whiteBall.vx = 30
+        app.whiteBall.vy = -15
     if key == "s":
         takeStep(app)
 
