@@ -1,3 +1,5 @@
+# To-do: Red balls geometry
+
 from cmu_graphics import *
 
 
@@ -19,7 +21,7 @@ class Ball:
         self.vx = 0
         self.vy = 0
         self.point = Ball.pointDict[self.color] if color != "white" else -1
-        self.radius = 6.5
+        self.radius = 5.3
 
 
 def initializeTableGeometry(app):
@@ -56,6 +58,7 @@ def initializeBalls(app):
             app.tableCenterY,
         ],
     }
+    
     app.yellowBall = Ball(
         "yellow", app.colorLocationDict["yellow"][0], app.colorLocationDict["yellow"][1]
     )
@@ -171,7 +174,7 @@ def drawSnookerTable(app):
 
 def drawBalls(app):
     for ball in app.colorBallList:
-        drawCircle(ball.cx, ball.cy, ball.radius, fill=ball.color, border="black")
+        drawCircle(ball.cx, ball.cy, ball.radius, fill=ball.color, border="black", borderWidth=1)
 
 
 def onAppStart(app):
