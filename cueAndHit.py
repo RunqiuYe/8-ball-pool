@@ -135,7 +135,7 @@ class Ball:
         # Question: bound for almost equal? how to guarantee that it will stop?
         # Current Solution: make sure the bound is larger than deceleration.
         # =====================================================================
-        if (self.vx ** 2 + self.vy ** 2) ** 0.5 > 0.1:
+        if (self.vx ** 2 + self.vy ** 2) ** 0.5 > 0.25:
             deceleration = 0.5
             decelerationX = - deceleration * self.vx / self.speed
             decelerationY = - deceleration * self.vy / self.speed
@@ -226,7 +226,11 @@ def newGame(app):
 def onAppStart(app):
     app.mouseX = 0
     app.mouseY = 0
-    app.aiming = False
+    app.aiming = True
+    app.holding = False
+    app.moving = False
+    app.aimingDirection = [1, 1]
+    app.hitForce = 0
     newGame(app)
 
 
@@ -234,33 +238,55 @@ def redrawAll(app):
     drawSnookerTable(app)
     drawBalls(app)
     if app.aiming == True:
-        aimingDistance = distance(
-            app.mouseX, app.mouseY, app.whiteBall.cx, app.whiteBall.cy
-        )
-        aimingDirection = [
-            (app.whiteBall.cx - app.mouseX) / aimingDistance,
-            (app.whiteBall.cy - app.mouseY) / aimingDistance,
-        ]
-        drawCueStick(app, aimingDirection)
+        drawCueStick(app, app.aimingDirection)
 
 
 def onMouseMove(app, mouseX, mouseY):
     app.mouseX = mouseX
     app.mouseY = mouseY
+    if app.aiming == True:
+        aimingDistance = distance(
+            app.mouseX, app.mouseY, app.whiteBall.cx, app.whiteBall.cy
+        )
+        app.aimingDirection = [
+            (app.whiteBall.cx - app.mouseX) / aimingDistance,
+            (app.whiteBall.cy - app.mouseY) / aimingDistance,
+        ]
 
 
-# def onStep(app):
-#     takeStep(app)
+def onMousePress(app, mouseX, mouseY):
+    if app.aiming == True:
+        app.holding = True
+
+
+def onMouseRelease(app, mouseX, mouseY):
+    if app.aiming == True:
+        app.aiming = False
+        app.holding = False
+        app.moving = True
+        app.whiteBall.vx = - app.hitForce * app.aimingDirection[0]
+        app.whiteBall.vy = - app.hitForce * app.aimingDirection[1]
+        app.hitForce = 0
+
+
+def onStep(app):
+    if app.holding == True:
+        app.hitForce += 1
+    takeStep(app)
 
 
 def takeStep(app):
-    app.whiteBall.move(app)
+    if app.moving == True:
+        app.whiteBall.move(app)
+    if app.moving == True and app.whiteBall.speed == 0:
+        app.moving = False
+        app.aiming = True
 
 
 def onKeyPress(app, key):
     if key == "h":
         app.whiteBall.vx = 30
-        app.whiteBall.vy = -15
+        app.whiteBall.vy = -10
     if key == "s":
         takeStep(app)
 
