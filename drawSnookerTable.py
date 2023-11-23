@@ -23,7 +23,7 @@ def drawPlayArea(app):
         app.tableCenterY,
         length,
         width,
-        fill="lightGreen",
+        fill="lightSeaGreen",
         align="center",
         border="black",
         borderWidth=2,
