@@ -154,7 +154,7 @@ class Ball:
         self.cx += self.vx
         self.cy += self.vy
 
-        # Collision function
+        # Collision with boundary function
         # =====================================================================
         if self.cx > tableRight - self.radius:
             self.cx = tableRight - self.radius
@@ -270,12 +270,12 @@ def onMouseRelease(app, mouseX, mouseY):
 
 
 def onStep(app):
-    if app.holding == True:
-        app.hitForce += 1
     takeStep(app)
 
 
 def takeStep(app):
+    if app.holding == True:
+        app.hitForce += 1
     if app.moving == True:
         app.whiteBall.move(app)
     if app.moving == True and app.whiteBall.speed == 0:
