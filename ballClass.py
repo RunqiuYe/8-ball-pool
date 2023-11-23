@@ -1,6 +1,5 @@
-# To-do: Red balls geometry
-
 from cmu_graphics import *
+import math
 
 
 class Ball:
@@ -85,6 +84,16 @@ def initializeBalls(app):
         app.pinkBall,
         app.blackBall,
     ]
+
+    app.redBallList = []
+    dx = app.pinkBall.radius * (math.sqrt(3) + 0.1)
+    dy = app.pinkBall.radius * 1.1
+    for i in range(1, 6):
+        for j in range(1, i + 1):
+            ballCordX = app.pinkBall.cx + app.pinkBall.radius * 2.2 + (i - 1) * dx
+            ballCordY = app.pinkBall.cy + (i - 1) * dy - app.pinkBall.radius * 2.1 * (j - 1)
+            newRedBall = Ball("red", ballCordX, ballCordY)
+            app.redBallList.append(newRedBall)
 
 
 def drawPlayArea(app):
@@ -174,6 +183,8 @@ def drawSnookerTable(app):
 
 def drawBalls(app):
     for ball in app.colorBallList:
+        drawCircle(ball.cx, ball.cy, ball.radius, fill=ball.color, border="black", borderWidth=1)
+    for ball in app.redBallList:
         drawCircle(ball.cx, ball.cy, ball.radius, fill=ball.color, border="black", borderWidth=1)
 
 
