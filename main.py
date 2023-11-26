@@ -265,7 +265,7 @@ def initializeBalls(app):
             app.redBallList.append(newRedBall)
 
     app.whiteBall = Ball("white", 180, app.tableCenterY)
-    
+
     app.ballList = [app.whiteBall] + app.colorBallList + app.redBallList
 
 
@@ -280,6 +280,7 @@ def drawBalls(app):
             border="black",
             borderWidth=1,
         )
+
 
 # ========================================================================
 # Game initializations (newGame)
@@ -306,16 +307,57 @@ def drawCueStick(app, aimingDirection):
     endY = app.whiteBall.cy + cueLength * unitY
     drawLine(startX, startY, endX, endY, lineWidth=5)
 
-
+def isAppStop(app):
+    for ball in app.ballList:
+        if ball.vx != 0 and ball.vy != 0:
+            return False
+    return True
 
 # ========================================================================
 # Main functions (onAppStart, redrawAll, takeStep, onKeyPress)
 # ========================================================================
+def initializeGamePlay(app):
+    app.mouseX = 0
+    app.mouseY = 0
+    app.aiming = True
+    app.holding = False
+    app.moving = False
+    app.aimingDirection = [1, 1]
+    app.hitForce = 0
 
 
 def newGame(app):
     initializeTableGeometry(app)
     initializeBalls(app)
+    initializeGamePlay(app)
+
+
+def onMouseMove(app, mouseX, mouseY):
+    app.mouseX = mouseX
+    app.mouseY = mouseY
+    if app.aiming == True:
+        aimingDistance = distance(
+            app.mouseX, app.mouseY, app.whiteBall.cx, app.whiteBall.cy
+        )
+        app.aimingDirection = [
+            (app.whiteBall.cx - app.mouseX) / aimingDistance,
+            (app.whiteBall.cy - app.mouseY) / aimingDistance,
+        ]
+
+
+def onMousePress(app, mouseX, mouseY):
+    if app.aiming == True:
+        app.holding = True
+
+
+def onMouseRelease(app, mouseX, mouseY):
+    if app.aiming == True:
+        app.aiming = False
+        app.holding = False
+        app.moving = True
+        app.whiteBall.vx = - app.hitForce * app.aimingDirection[0]
+        app.whiteBall.vy = - app.hitForce * app.aimingDirection[1]
+        app.hitForce = 0
 
 
 def onStep(app):
@@ -323,17 +365,23 @@ def onStep(app):
 
 
 def takeStep(app):
-    for i in range(len(app.ballList) - 1):
-        for j in range(i + 1, len(app.ballList)):
-            ball1 = app.ballList[i]
-            ball2 = app.ballList[j]
-            if distance(ball1.cx, ball1.cy, ball2.cx, ball2.cy) <= 2 * ball1.radius:
-                ball1.move(app, -1)
-                ball2.move(app, -1)
-                ball1.collide(ball2, app)
+    if app.holding == True:
+        app.hitForce += 1
+    if app.moving == True:
+        for i in range(len(app.ballList) - 1):
+            for j in range(i + 1, len(app.ballList)):
+                ball1 = app.ballList[i]
+                ball2 = app.ballList[j]
+                if distance(ball1.cx, ball1.cy, ball2.cx, ball2.cy) <= 2 * ball1.radius:
+                    ball1.move(app, -1)
+                    ball2.move(app, -1)
+                    ball1.collide(ball2, app)
 
-    for ball in app.ballList:
-        ball.move(app)
+        for ball in app.ballList:
+            ball.move(app)
+    if app.moving == True and isAppStop(app):
+        app.moving = False
+        app.aiming = True
 
 
 def onKeyPress(app, key):
