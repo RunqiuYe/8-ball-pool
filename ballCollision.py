@@ -19,7 +19,7 @@ class Ball:
         self.vx = 0
         self.vy = 0
         self.point = Ball.pointDict[self.color] if color != "white" else -1
-        self.radius = 5.3
+        self.radius = 6.8
     
     def __repr__(self):
         return f"{self.color} Ball"
@@ -105,7 +105,7 @@ def initializeTableGeometry(app):
     app.tableLength = 370 * 2
     app.lineLocation = 74 * 2
     app.regionRadius = 29.7 * 2
-    app.pocketRadius = 8.6 / 2 * 2
+    app.pocketRadius = 10 / 2 * 2
     app.blackLocation = 32.5 * 2
 
 

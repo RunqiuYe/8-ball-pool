@@ -25,7 +25,7 @@ def initializeTableGeometry(app):
     app.tableLength = 357 * 2
     app.lineLocation = 74 * 2
     app.regionRadius = 29.7 * 2
-    app.pocketRadius = 8.6 / 2 * 2
+    app.pocketRadius = 10 / 2 * 2
     app.pocketLocations = [
         (app.tableCenterX + app.tableLength / 2, app.tableCenterY + app.tableWidth / 2),
         (app.tableCenterX + app.tableLength / 2, app.tableCenterY - app.tableWidth / 2),
@@ -121,7 +121,7 @@ class Ball:
         self.vy = 0
         self.speed = 0
         self.point = Ball.pointDict[self.color] if color != "white" else -1
-        self.radius = 5.3
+        self.radius = 6.8
 
     def move(self, app):
         tableLeft = app.tableCenterX - app.tableLength / 2

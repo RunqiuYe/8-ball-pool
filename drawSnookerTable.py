@@ -9,7 +9,7 @@ def initializeTableGeometry(app):
     app.tableLength = 357 * 2
     app.lineLocation = 74 * 2
     app.regionRadius = 29.7 * 2
-    app.pocketRadius = 8.6 / 2 * 2
+    app.pocketRadius = 10 / 2 * 2
 
 
 def drawPlayArea(app):
