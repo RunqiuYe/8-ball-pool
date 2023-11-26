@@ -25,7 +25,7 @@ def initializeTableGeometry(app):
     app.tableLength = 357 * 2
     app.lineLocation = 74 * 2
     app.regionRadius = 29.7 * 2
-    app.pocketRadius = 8.6 / 2 * 2
+    app.pocketRadius = 10 / 2 * 2
     app.pocketLocations = [
         (app.tableCenterX + app.tableLength / 2, app.tableCenterY + app.tableWidth / 2),
         (app.tableCenterX + app.tableLength / 2, app.tableCenterY - app.tableWidth / 2),
@@ -49,7 +49,7 @@ def drawPlayArea(app):
         app.tableCenterY,
         length,
         width,
-        fill="lightSeaGreen",
+        fill="lightGreen",
         align="center",
         border="black",
         borderWidth=2,
@@ -121,7 +121,7 @@ class Ball:
         self.vx = 0
         self.vy = 0
         self.point = Ball.pointDict[self.color] if color != "white" else -1
-        self.radius = 5.3
+        self.radius = 6.7
 
     def __repr__(self):
         return f"{self.color} Ball"
@@ -171,6 +171,11 @@ class Ball:
         elif self.cy > tableBot - self.radius:
             self.cy = tableBot - self.radius
             self.vy = -self.vy
+        
+        for (pocketX, pocketY) in app.pocketLocations:
+            if distance(self.cx, self.cy, pocketX, pocketY) <= app.pocketRadius:
+                ballIndex = app.ballList.index(self)
+                app.ballList.pop(ballIndex)
 
     # Collision check functinos
     # When checking the collision we will follow the order of a list.
@@ -179,6 +184,10 @@ class Ball:
         self.speed = (self.vx**2 + self.vy**2) ** 0.5
         other.speed = (other.vx**2 + other.vy**2) ** 0.5
         if self.speed < 10 ** (-3) and other.speed < 10 ** (-3):
+            self.vx = 0
+            self.vy = 0
+            other.vx = 0
+            other.vy = 0
             return
         CoefRes = 1  # Coefficient of restitution — 1 means elastic collision
         ballDistance = distance(self.cx, self.cy, other.cx, other.cy)
@@ -367,6 +376,7 @@ def onStep(app):
 def takeStep(app):
     if app.holding == True:
         app.hitForce += 1
+    
     if app.moving == True:
         for i in range(len(app.ballList) - 1):
             for j in range(i + 1, len(app.ballList)):
@@ -379,6 +389,7 @@ def takeStep(app):
 
         for ball in app.ballList:
             ball.move(app)
+    
     if app.moving == True and isAppStop(app):
         app.moving = False
         app.aiming = True
@@ -386,7 +397,7 @@ def takeStep(app):
 
 def onKeyPress(app, key):
     if key == "z":
-        app.brownBall.vy = 10
+        app.ballList[-3].vy=-3
     if key == "s":
         takeStep(app)
 
@@ -394,6 +405,8 @@ def onKeyPress(app, key):
 def redrawAll(app):
     drawSnookerTable(app)
     drawBalls(app)
+    if app.aiming == True:
+        drawCueStick(app, app.aimingDirection)
 
 
 def main():
