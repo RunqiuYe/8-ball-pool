@@ -1,2 +1,2 @@
-# CMU 15112 Snookers Project
+# CMU 15112 Pool Game Project
  
