@@ -201,20 +201,20 @@ def initializeBalls(app):
     for i in range(1, 6):
         for j in range(1, i + 1):
             ballCordX = initialX + (i - 1) * dx
-            ballCordY = (
-                initialY + (i - 1) * dy - ballRadius * 2.1 * (j - 1)
-            )
+            ballCordY = initialY + (i - 1) * dy - ballRadius * 2.1 * (j - 1)
             colorIndex = colorList[i - 1][j - 1]
             if colorIndex == 8:
-                color = 'black'
+                color = "black"
             elif colorIndex == 0:
-                color = 'yellow'
+                color = "yellow"
             else:
-                color = 'red'
+                color = "red"
             newRedBall = Ball(color, ballCordX, ballCordY)
             app.targetBallList.append(newRedBall)
-    
-    app.whiteBall = Ball("white", app.tableCenterX - app.tableLength / 3, app.tableCenterY)
+
+    app.whiteBall = Ball(
+        "white", app.tableCenterX - app.tableLength / 3, app.tableCenterY
+    )
 
     app.ballList = [app.whiteBall] + app.targetBallList
 
@@ -352,7 +352,7 @@ def redrawAll(app):
     drawBalls(app)
     if app.aiming == True:
         drawCueStick(app, app.aimingDirection)
-    drawLabel(f"Force:{app.hitForce}", app.width - 150, 150, size = 32)
+    drawLabel(f"Force:{app.hitForce}", app.width - 150, 150, size=32)
 
 
 def main():
