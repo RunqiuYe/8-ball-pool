@@ -402,6 +402,8 @@ def onKeyPress(app, key):
         app.ballList[-3].vy = -3
     if key == "s":
         takeStep(app)
+    if key == "r":
+        newGame(app)
 
 
 def redrawAll(app):
