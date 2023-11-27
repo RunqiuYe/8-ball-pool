@@ -171,8 +171,8 @@ class Ball:
         elif self.cy > tableBot - self.radius:
             self.cy = tableBot - self.radius
             self.vy = -self.vy
-        
-        for (pocketX, pocketY) in app.pocketLocations:
+
+        for pocketX, pocketY in app.pocketLocations:
             if distance(self.cx, self.cy, pocketX, pocketY) <= app.pocketRadius:
                 ballIndex = app.ballList.index(self)
                 app.ballList.pop(ballIndex)
@@ -316,11 +316,13 @@ def drawCueStick(app, aimingDirection):
     endY = app.whiteBall.cy + cueLength * unitY
     drawLine(startX, startY, endX, endY, lineWidth=5)
 
+
 def isAppStop(app):
     for ball in app.ballList:
         if ball.vx != 0 and ball.vy != 0:
             return False
     return True
+
 
 # ========================================================================
 # Main functions (onAppStart, redrawAll, takeStep, onKeyPress)
@@ -364,8 +366,8 @@ def onMouseRelease(app, mouseX, mouseY):
         app.aiming = False
         app.holding = False
         app.moving = True
-        app.whiteBall.vx = - app.hitForce * app.aimingDirection[0]
-        app.whiteBall.vy = - app.hitForce * app.aimingDirection[1]
+        app.whiteBall.vx = -app.hitForce * app.aimingDirection[0]
+        app.whiteBall.vy = -app.hitForce * app.aimingDirection[1]
         app.hitForce = 0
 
 
@@ -376,7 +378,7 @@ def onStep(app):
 def takeStep(app):
     if app.holding == True:
         app.hitForce += 1
-    
+
     if app.moving == True:
         for i in range(len(app.ballList) - 1):
             for j in range(i + 1, len(app.ballList)):
@@ -389,7 +391,7 @@ def takeStep(app):
 
         for ball in app.ballList:
             ball.move(app)
-    
+
     if app.moving == True and isAppStop(app):
         app.moving = False
         app.aiming = True
@@ -397,7 +399,7 @@ def takeStep(app):
 
 def onKeyPress(app, key):
     if key == "z":
-        app.ballList[-3].vy=-3
+        app.ballList[-3].vy = -3
     if key == "s":
         takeStep(app)
 
