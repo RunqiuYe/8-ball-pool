@@ -26,12 +26,30 @@ def initializeTableGeometry(app):
     app.lineLocation = app.tableCenterX - app.tableLength / 4
     app.pocketRadius = 10 / 2 * 3
     app.pocketLocations = [
-        (app.tableCenterX + app.tableLength / 2 - app.pocketRadius / 2, app.tableCenterY + app.tableWidth / 2 - app.pocketRadius / 2),
-        (app.tableCenterX + app.tableLength / 2 - app.pocketRadius / 2, app.tableCenterY - app.tableWidth / 2 + app.pocketRadius / 2),
-        (app.tableCenterX - app.tableLength / 2 + app.pocketRadius / 2, app.tableCenterY + app.tableWidth / 2 - app.pocketRadius / 2),
-        (app.tableCenterX - app.tableLength / 2 + app.pocketRadius / 2, app.tableCenterY - app.tableWidth / 2 + app.pocketRadius / 2),
-        (app.tableCenterX, app.tableCenterY + app.tableWidth / 2 - app.pocketRadius / 2.5),
-        (app.tableCenterX, app.tableCenterY - app.tableWidth / 2 + app.pocketRadius / 2.5),
+        (
+            app.tableCenterX + app.tableLength / 2 - app.pocketRadius / 2,
+            app.tableCenterY + app.tableWidth / 2 - app.pocketRadius / 2,
+        ),
+        (
+            app.tableCenterX + app.tableLength / 2 - app.pocketRadius / 2,
+            app.tableCenterY - app.tableWidth / 2 + app.pocketRadius / 2,
+        ),
+        (
+            app.tableCenterX - app.tableLength / 2 + app.pocketRadius / 2,
+            app.tableCenterY + app.tableWidth / 2 - app.pocketRadius / 2,
+        ),
+        (
+            app.tableCenterX - app.tableLength / 2 + app.pocketRadius / 2,
+            app.tableCenterY - app.tableWidth / 2 + app.pocketRadius / 2,
+        ),
+        (
+            app.tableCenterX,
+            app.tableCenterY + app.tableWidth / 2 - app.pocketRadius / 2.5,
+        ),
+        (
+            app.tableCenterX,
+            app.tableCenterY - app.tableWidth / 2 + app.pocketRadius / 2.5,
+        ),
     ]
 
 
@@ -211,7 +229,6 @@ def initializeBalls(app):
                 color = "red"
             newRedBall = Ball(color, ballCordX, ballCordY)
             app.targetBallList.append(newRedBall)
-    
 
     app.whiteBall = Ball(
         "white", app.tableCenterX - app.tableLength / 3, app.tableCenterY
@@ -291,24 +308,27 @@ def newGame(app):
     initializeBalls(app)
     initializeGamePlay(app)
 
+
 def changeHittingPlayer(app):
     if app.hittingPlayer == 0:
         app.hittingPlayer = 1
     else:
         app.hittingPlayer = 0
 
+
 def blackBallPotted(app):
     for ball in app.pottedBall:
-        if ball.color == 'black':
+        if ball.color == "black":
             return True
     return False
 
 
 def whiteBallPotted(app):
     for ball in app.pottedBall:
-        if ball.color == 'white':
+        if ball.color == "white":
             return True
     return False
+
 
 def targetBallLeft(app):
     if app.hittingTarget[0] == None:
@@ -318,6 +338,7 @@ def targetBallLeft(app):
             if ball.color == app.hittingTarget[0]:
                 return True
         return False
+
 
 def onMouseMove(app, mouseX, mouseY):
     app.mouseX = mouseX
@@ -387,8 +408,6 @@ def takeStep(app):
 
 
 def onKeyPress(app, key):
-    if key == "z":
-        app.ballList[-3].vy = -3
     if key == "s":
         takeStep(app)
     if key == "r":

@@ -134,8 +134,8 @@ class Ball:
         # Question: bound for almost equal? how to guarantee that it will stop?
         # Current Solution: make sure the bound is larger than deceleration.
         # =====================================================================
-        if (self.vx**2 + self.vy**2) ** 0.5 > 0.25:
-            deceleration = 0.5
+        if (self.vx**2 + self.vy**2) ** 0.5 > 0.1:
+            deceleration = 0.2
             decelerationX = -deceleration * self.vx / self.speed
             decelerationY = -deceleration * self.vy / self.speed
             self.vx += decelerationX
@@ -171,7 +171,7 @@ class Ball:
         for pocketX, pocketY in app.pocketLocations:
             if distance(self.cx, self.cy, pocketX, pocketY) <= app.pocketRadius:
                 ballIndex = app.ballList.index(self)
-                app.ballList.pop(ballIndex)
+                app.pottedBall.append(app.ballList.pop(ballIndex))
 
     # Collision check functinos
     # When checking the collision we will follow the order of a list.
@@ -216,7 +216,7 @@ def initializeBalls(app):
     initialY = app.tableCenterY
     dx = ballRadius * (math.sqrt(3) + 0.05)
     dy = ballRadius * 1.05
-    for i in range(1, 6):
+    for i in range(1, 4):
         for j in range(1, i + 1):
             ballCordX = initialX + (i - 1) * dx
             ballCordY = initialY + (i - 1) * dy - ballRadius * 2.1 * (j - 1)
@@ -295,11 +295,58 @@ def initializeGamePlay(app):
     app.aimingDirection = [1, 1]
     app.hitForce = 0
 
+    app.hittingPlayer = 0
+    app.hittingTarget = [None, None]
+    app.pottedBall = []
+    app.gameOver = False
+    app.winner = None
+
 
 def newGame(app):
     initializeTableGeometry(app)
     initializeBalls(app)
     initializeGamePlay(app)
+
+
+def changeHittingPlayer(app):
+    if app.hittingPlayer == 0:
+        app.hittingPlayer = 1
+    else:
+        app.hittingPlayer = 0
+
+
+def blackBallPotted(app):
+    for ball in app.pottedBall:
+        if ball.color == "black":
+            return True
+    return False
+
+
+def whiteBallPotted(app):
+    for ball in app.pottedBall:
+        if ball.color == "white":
+            return True
+    return False
+
+
+def targetBallLeft(app, target):
+    if target == None:
+        return True
+    else:
+        for ball in app.ballList:
+            if ball.color == target:
+                return True
+        return False
+
+
+def targetBallPotted(app):
+    target = app.hittingTarget[app.hittingPlayer]
+    if target == None:
+        return True
+    for ball in app.pottedBall:
+        if ball.color == target:
+            return True
+    return False
 
 
 def onMouseMove(app, mouseX, mouseY):
@@ -351,7 +398,39 @@ def takeStep(app):
         for ball in app.ballList:
             ball.move(app)
 
+    # Change hitting player and update winner
+    # ================================================================
+    # When all the balls stop moving, change game status based on potted balls.
+    # If no ball is potted, change hitting player.
+    # If black ball is potted, the hitting player wins if the black ball should be potted now.
+    # Otherwise, if the black ball should not be potted now, the other player wins.
+    # If the white ball is potted, the other player wins.
+    # If the hitting player potted a target ball, he continues to hit.
+    # If the first ball is potted, set the target for both players.
+
     if app.moving == True and isAppStop(app):
+        currentPlayerTarget = app.hittingTarget[app.hittingPlayer]
+        if app.pottedBall == []:
+            changeHittingPlayer(app)
+        elif blackBallPotted(app):
+            app.gameOver = True
+            if targetBallLeft(app, currentPlayerTarget):
+                app.winner = 1 if app.hittingPlayer == 0 else 0
+            else:
+                app.winner = app.hittingPlayer
+        elif whiteBallPotted(app):
+            app.gameOver = True
+            otherPlayer = 1 if app.hittingPlayer == 0 else 0
+            app.winner = otherPlayer
+        elif not targetBallPotted(app):
+            changeHittingPlayer(app)
+        elif app.hittingTarget[app.hittingPlayer] == None:
+            app.hittingTarget[app.hittingPlayer] = app.pottedBall[0].color
+            otherPlayer = 1 if app.hittingPlayer == 0 else 0
+            otherColor = "red" if app.pottedBall[0].color == "yellow" else "yellow"
+            app.hittingTarget[otherPlayer] = otherColor
+        app.pottedBall = []
+
         app.moving = False
         app.aiming = True
 
@@ -361,14 +440,28 @@ def onKeyPress(app, key):
         takeStep(app)
     if key == "r":
         newGame(app)
+    testBlack = Ball("black", app.tableCenterX, app.tableCenterY)
+    if key == "w":
+        app.moving = True
+        app.ballList = []
 
 
 def redrawAll(app):
-    drawPoolTable(app)
-    drawBalls(app)
-    if app.aiming == True:
-        drawCueStick(app, app.aimingDirection)
-    drawLabel(f"Force:{app.hitForce}", app.width - 150, 150, size=32)
+    if app.gameOver == False:
+        drawPoolTable(app)
+        drawBalls(app)
+        if app.aiming == True:
+            drawCueStick(app, app.aimingDirection)
+        drawLabel(f"Force: {app.hitForce}", app.width - 150, 150, size=25)
+        drawLabel(
+            f"Player 1 Target: {app.hittingTarget[1]}", app.width - 150, 120, size=25
+        )
+        drawLabel(
+            f"Player 0 Target: {app.hittingTarget[0]}", app.width - 150, 90, size=25
+        )
+        drawLabel(f"Hitting Player: {app.hittingPlayer}", app.width - 150, 60, size=25)
+    else:
+        drawLabel(f"Player {app.winner} wins", app.width / 2, app.height / 2, size=48)
 
 
 def main():
