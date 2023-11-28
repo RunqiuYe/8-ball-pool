@@ -26,12 +26,12 @@ def initializeTableGeometry(app):
     app.lineLocation = app.tableCenterX - app.tableLength / 4
     app.pocketRadius = 10 / 2 * 3
     app.pocketLocations = [
-        (app.tableCenterX + app.tableLength / 2, app.tableCenterY + app.tableWidth / 2),
-        (app.tableCenterX + app.tableLength / 2, app.tableCenterY - app.tableWidth / 2),
-        (app.tableCenterX - app.tableLength / 2, app.tableCenterY + app.tableWidth / 2),
-        (app.tableCenterX - app.tableLength / 2, app.tableCenterY - app.tableWidth / 2),
-        (app.tableCenterX, app.tableCenterY + app.tableWidth / 2),
-        (app.tableCenterX, app.tableCenterY - app.tableWidth / 2),
+        (app.tableCenterX + app.tableLength / 2 - app.pocketRadius / 2, app.tableCenterY + app.tableWidth / 2 - app.pocketRadius / 2),
+        (app.tableCenterX + app.tableLength / 2 - app.pocketRadius / 2, app.tableCenterY - app.tableWidth / 2 + app.pocketRadius / 2),
+        (app.tableCenterX - app.tableLength / 2 + app.pocketRadius / 2, app.tableCenterY + app.tableWidth / 2 - app.pocketRadius / 2),
+        (app.tableCenterX - app.tableLength / 2 + app.pocketRadius / 2, app.tableCenterY - app.tableWidth / 2 + app.pocketRadius / 2),
+        (app.tableCenterX, app.tableCenterY + app.tableWidth / 2 - app.pocketRadius / 2.5),
+        (app.tableCenterX, app.tableCenterY - app.tableWidth / 2 + app.pocketRadius / 2.5),
     ]
 
 
@@ -198,7 +198,7 @@ def initializeBalls(app):
     initialY = app.tableCenterY
     dx = ballRadius * (math.sqrt(3) + 0.05)
     dy = ballRadius * 1.05
-    for i in range(1, 6):
+    for i in range(1, 4):
         for j in range(1, i + 1):
             ballCordX = initialX + (i - 1) * dx
             ballCordY = initialY + (i - 1) * dy - ballRadius * 2.1 * (j - 1)
@@ -211,6 +211,7 @@ def initializeBalls(app):
                 color = "red"
             newRedBall = Ball(color, ballCordX, ballCordY)
             app.targetBallList.append(newRedBall)
+    
 
     app.whiteBall = Ball(
         "white", app.tableCenterX - app.tableLength / 3, app.tableCenterY
@@ -302,6 +303,13 @@ def blackBallPotted(app):
             return True
     return False
 
+
+def whiteBallPotted(app):
+    for ball in app.pottedBall:
+        if ball.color == 'white':
+            return True
+    return False
+
 def targetBallLeft(app):
     if app.hittingTarget[0] == None:
         return True
@@ -361,6 +369,9 @@ def takeStep(app):
             ball.move(app)
 
     if app.moving == True and isAppStop(app):
+        if whiteBallPotted(app):
+            app.gameOver = True
+            app.win = False
         if app.pottedBall == []:
             pass
         elif blackBallPotted(app):
