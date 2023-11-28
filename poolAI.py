@@ -273,54 +273,89 @@ def drawCueStick(app, aimingDirection):
     endY = app.whiteBall.cy + cueLength * unitY
     drawLine(startX, startY, endX, endY, lineWidth=5)
 
+def inPocket(app, x, y):
+    for (pocketX, pocketY) in app.pocketLocations:
+        if distance(x, y, pocketX, pocketY) <= app.pocketRadius:
+            return True
+    return False
+
+def findListMax(L):
+    maxValue = -100
+    maxIndex = 0
+    for i in range(len(L)):
+        if L[i] > maxValue:
+            maxIndex = i
+            maxValue = L[i]
+    return maxIndex
+
 
 def findBestHit(app):
+    resultList = [0] * 73
+    forceList = [20] * 73
+    for i in range(73):
+        aimingAngle = i * 5
+        resultList[i], forceList[i] = evaluateHit(app, aimingAngle)
+    bestIndex = findListMax(resultList)
+    bestAngle = 5 * bestIndex
+    bestForce = forceList[bestIndex]
+    return ([- math.cos(bestAngle * math.pi / 180), - math.sin(bestAngle * math.pi / 180)], bestForce)
+    
+
+def evaluateHit(app, aimingAngle):
     tableLeft = app.tableCenterX - app.tableLength / 2
     tableRight = app.tableCenterX + app.tableLength / 2
     tableTop = app.tableCenterY - app.tableWidth / 2
     tableBot = app.tableCenterY + app.tableWidth / 2
-    resultList = [0] * 73
     aimingBallList = copy.copy(app.ballList[1:])
 
-    for i in range(73):
-        aimingAngle = i * 5
-        aimingAngleRad = aimingAngle * math.pi / 180
-        aimingDirection = [math.cos(aimingAngleRad), math.sin(aimingAngleRad)]
-        unitX = aimingDirection[0]
-        unitY = aimingDirection[1]
+    aimingAngleRad = aimingAngle * math.pi / 180
+    aimingDirection = [- math.cos(aimingAngleRad), - math.sin(aimingAngleRad)]
+    unitX = aimingDirection[0]
+    unitY = aimingDirection[1]
 
-        collisionPointList = []
-        collisionBallList = []
+    collisionPointList = []
+    collisionBallList = []
 
-        curX = app.whiteBall.cx
-        curY = app.whiteBall.cy
+    curX = app.whiteBall.cx
+    curY = app.whiteBall.cy
 
-        for t in range(600):
-            curX = curX - unitX
+    for t in range(600):
+        curX = curX - unitX
+        curY = curY - unitY
+
+        if inPocket(app, curX, curY):
+            if collisionBallList == [] or collisionBallList[-1].color == "black":
+                return (- 100, 20)
+            else:
+                return (100, t / 10)
+        
+        if curX > tableRight or curX < tableLeft:
+            curX = curX + unitX
             curY = curY - unitY
-            if curX > tableRight or curX < tableLeft:
-                collisionPointList.append((curX, curY))
-                unitX = -unitX
-            if curY > tableBot or curY < tableTop:
-                collisionPointList.append((curX, curY))
-                unitY = -unitY
-            if t == 599:
-                collisionPointList.append((curX, curY))
-            for ball in aimingBallList:
-                if distance(curX, curY, ball.cx, ball.cy) < ball.radius * 2:
-                    collisionPointList.append((curX, curY))
-                    ballIndex = aimingBallList.index(ball)
-                    aimingBallList.pop(ballIndex)
-                    unitX = - (ball.cx - curX) / distance(curX, curY, ball.cx, ball.cy)
-                    unitY = - (ball.cy - curY) / distance(curX, curY, ball.cx, ball.cy)
+            collisionPointList.append((curX, curY))
+            unitX = -unitX
+        if curY > tableBot or curY < tableTop:
+            curX = curX + unitX
+            curY = curY - unitY
+            collisionPointList.append((curX, curY))
+            unitY = -unitY
 
-        LineList = [(app.whiteBall.cx, app.whiteBall.cy)] + collisionPointList
+        for ball in aimingBallList:
+            if distance(curX, curY, ball.cx, ball.cy) < ball.radius * 2:
+                collisionPointList.append((curX, curY))
+                collisionBallList.append(ball)
+                ballIndex = aimingBallList.index(ball)
+                aimingBallList.pop(ballIndex)
+                unitX = - (ball.cx - curX) / distance(curX, curY, ball.cx, ball.cy)
+                unitY = - (ball.cy - curY) / distance(curX, curY, ball.cx, ball.cy)
+        
+    return (0, 20)
 
 
 
 def isAppStop(app):
     for ball in app.ballList:
-        if ball.vx != 0 and ball.vy != 0:
+        if ball.vx != 0 or ball.vy != 0:
             return False
     return True
 
@@ -375,43 +410,13 @@ def targetBallLeft(app):
         return False
 
 
-def onMouseMove(app, mouseX, mouseY):
-    app.mouseX = mouseX
-    app.mouseY = mouseY
-    if app.aiming == True:
-        aimingDistance = distance(
-            app.mouseX, app.mouseY, app.whiteBall.cx, app.whiteBall.cy
-        )
-        app.aimingDirection = [
-            (app.whiteBall.cx - app.mouseX) / aimingDistance,
-            (app.whiteBall.cy - app.mouseY) / aimingDistance,
-        ]
-
-
-def onMousePress(app, mouseX, mouseY):
-    if app.aiming == True:
-        app.holding = True
-
-
-def onMouseRelease(app, mouseX, mouseY):
-    if app.aiming == True:
-        app.aiming = False
-        app.holding = False
-        app.moving = True
-        app.whiteBall.vx = -app.hitForce * app.aimingDirection[0]
-        app.whiteBall.vy = -app.hitForce * app.aimingDirection[1]
-        app.hitForce = 0
-
-
 def onStep(app):
     takeStep(app)
 
 
 def takeStep(app):
-    if app.holding == True:
-        app.hitForce += 1
-
     if app.moving == True:
+        print(app.whiteBall.vx, app.whiteBall.vy)
         for i in range(len(app.ballList) - 1):
             for j in range(i + 1, len(app.ballList)):
                 ball1 = app.ballList[i]
@@ -440,6 +445,16 @@ def takeStep(app):
             app.hittingTarget[app.hittingPlayer] = app.pottedBall[0].color
         app.moving = False
         app.aiming = True
+
+    if app.aiming == True:
+        print("evaluating")
+        app.aimingDirection, app.hitForce = findBestHit(app)
+        app.whiteBall.vx = - app.hitForce * app.aimingDirection[0]
+        app.whiteBall.vy = - app.hitForce * app.aimingDirection[1]
+        print(app.whiteBall.vx, app.whiteBall.vy)
+        app.aiming = False
+        app.moving = True
+        print(app.moving, app.aiming)
 
 
 def onKeyPress(app, key):

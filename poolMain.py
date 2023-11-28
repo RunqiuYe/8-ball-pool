@@ -278,7 +278,7 @@ def drawCueStick(app, aimingDirection):
 
 def isAppStop(app):
     for ball in app.ballList:
-        if ball.vx != 0 and ball.vy != 0:
+        if ball.vx != 0 or ball.vy != 0:
             return False
     return True
 
