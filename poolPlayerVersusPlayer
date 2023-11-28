@@ -216,7 +216,7 @@ def initializeBalls(app):
     initialY = app.tableCenterY
     dx = ballRadius * (math.sqrt(3) + 0.05)
     dy = ballRadius * 1.05
-    for i in range(1, 4):
+    for i in range(1, 6):
         for j in range(1, i + 1):
             ballCordX = initialX + (i - 1) * dx
             ballCordY = initialY + (i - 1) * dy - ballRadius * 2.1 * (j - 1)
@@ -268,7 +268,7 @@ def drawCueStick(app, aimingDirection):
     ballRad = app.whiteBall.radius
     unitX = aimingDirection[0]
     unitY = aimingDirection[1]
-    cueLength = 120 * 2
+    cueLength = 150 * 2
     startX = app.whiteBall.cx + 2 * ballRad * unitX
     startY = app.whiteBall.cy + 2 * ballRad * unitY
     endX = app.whiteBall.cx + cueLength * unitX
