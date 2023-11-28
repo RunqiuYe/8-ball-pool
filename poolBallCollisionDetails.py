@@ -191,33 +191,9 @@ class Ball:
 
 # Initialize pool balls
 def initializeBalls(app):
-    colorList = [[1], [0, 1], [1, 8, 0], [0, 1, 0, 1], [1, 0, 1, 0, 0]]
-    app.targetBallList = []
-    ballRadius = 6.8 * 1.5
-    initialX = app.tableCenterX + app.tableLength / 4
-    initialY = app.tableCenterY
-    dx = ballRadius * (math.sqrt(3) + 0.05)
-    dy = ballRadius * 1.05
-    for i in range(1, 6):
-        for j in range(1, i + 1):
-            ballCordX = initialX + (i - 1) * dx
-            ballCordY = initialY + (i - 1) * dy - ballRadius * 2.1 * (j - 1)
-            colorIndex = colorList[i - 1][j - 1]
-            if colorIndex == 8:
-                color = "black"
-            elif colorIndex == 0:
-                color = "yellow"
-            else:
-                color = "red"
-            newRedBall = Ball(color, ballCordX, ballCordY)
-            app.targetBallList.append(newRedBall)
-
-    app.whiteBall = Ball(
-        "white", app.tableCenterX - app.tableLength / 3, app.tableCenterY
-    )
-
-    app.ballList = [app.whiteBall] + app.targetBallList
-
+    app.ball1 = Ball("red", app.tableCenterX - app.tableLength / 4, app.tableCenterY)
+    app.ball2 = Ball("yellow", app.tableCenterX + app.tableLength / 4, app.tableCenterY)
+    app.ballList = [app.ball1, app.ball2]
 
 # Draw pool balls
 def drawBalls(app):
@@ -242,40 +218,10 @@ def onAppStart(app):
 
 
 # ========================================================================
-# cue stick functions (drawing)
-# ========================================================================
-
-
-def drawCueStick(app, aimingDirection):
-    ballRad = app.whiteBall.radius
-    unitX = aimingDirection[0]
-    unitY = aimingDirection[1]
-    cueLength = 120 * 2
-    startX = app.whiteBall.cx + 2 * ballRad * unitX
-    startY = app.whiteBall.cy + 2 * ballRad * unitY
-    endX = app.whiteBall.cx + cueLength * unitX
-    endY = app.whiteBall.cy + cueLength * unitY
-    drawLine(startX, startY, endX, endY, lineWidth=5)
-
-
-def isAppStop(app):
-    for ball in app.ballList:
-        if ball.vx != 0 and ball.vy != 0:
-            return False
-    return True
-
-
-# ========================================================================
 # Main functions (onAppStart, redrawAll, takeStep, onKeyPress)
 # ========================================================================
 def initializeGamePlay(app):
-    app.mouseX = 0
-    app.mouseY = 0
-    app.aiming = True
-    app.holding = False
-    app.moving = False
-    app.aimingDirection = [1, 1]
-    app.hitForce = 0
+    app.moving = True
 
 
 def newGame(app):
@@ -284,42 +230,11 @@ def newGame(app):
     initializeGamePlay(app)
 
 
-def onMouseMove(app, mouseX, mouseY):
-    app.mouseX = mouseX
-    app.mouseY = mouseY
-    if app.aiming == True:
-        aimingDistance = distance(
-            app.mouseX, app.mouseY, app.whiteBall.cx, app.whiteBall.cy
-        )
-        app.aimingDirection = [
-            (app.whiteBall.cx - app.mouseX) / aimingDistance,
-            (app.whiteBall.cy - app.mouseY) / aimingDistance,
-        ]
-
-
-def onMousePress(app, mouseX, mouseY):
-    if app.aiming == True:
-        app.holding = True
-
-
-def onMouseRelease(app, mouseX, mouseY):
-    if app.aiming == True:
-        app.aiming = False
-        app.holding = False
-        app.moving = True
-        app.whiteBall.vx = -app.hitForce * app.aimingDirection[0]
-        app.whiteBall.vy = -app.hitForce * app.aimingDirection[1]
-        app.hitForce = 0
-
-
-def onStep(app):
-    takeStep(app)
+# def onStep(app):
+#     takeStep(app)
 
 
 def takeStep(app):
-    if app.holding == True:
-        app.hitForce += 1
-
     if app.moving == True:
         for i in range(len(app.ballList) - 1):
             for j in range(i + 1, len(app.ballList)):
@@ -333,14 +248,11 @@ def takeStep(app):
         for ball in app.ballList:
             ball.move(app)
 
-    if app.moving == True and isAppStop(app):
-        app.moving = False
-        app.aiming = True
-
 
 def onKeyPress(app, key):
     if key == "z":
-        app.ballList[-3].vy = -3
+        app.ballList[0].vx = 100
+        # app.ballList[0].vx = 20
     if key == "s":
         takeStep(app)
     if key == "r":
@@ -350,9 +262,6 @@ def onKeyPress(app, key):
 def redrawAll(app):
     drawPoolTable(app)
     drawBalls(app)
-    if app.aiming == True:
-        drawCueStick(app, app.aimingDirection)
-    drawLabel(f"Force:{app.hitForce}", app.width - 150, 150, size=32)
 
 
 def main():

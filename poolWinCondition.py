@@ -116,8 +116,8 @@ class Ball:
         # Question: bound for almost equal? how to guarantee that it will stop?
         # Current Solution: make sure the bound is larger than deceleration.
         # =====================================================================
-        if (self.vx**2 + self.vy**2) ** 0.5 > 0.25:
-            deceleration = 0.5
+        if (self.vx**2 + self.vy**2) ** 0.5 > 0.1:
+            deceleration = 0.2
             decelerationX = -deceleration * self.vx / self.speed
             decelerationY = -deceleration * self.vy / self.speed
             self.vx += decelerationX
@@ -153,7 +153,7 @@ class Ball:
         for pocketX, pocketY in app.pocketLocations:
             if distance(self.cx, self.cy, pocketX, pocketY) <= app.pocketRadius:
                 ballIndex = app.ballList.index(self)
-                app.ballList.pop(ballIndex)
+                app.pottedBall.append(app.ballList.pop(ballIndex))
 
     # Collision check functinos
     # When checking the collision we will follow the order of a list.
@@ -277,12 +277,39 @@ def initializeGamePlay(app):
     app.aimingDirection = [1, 1]
     app.hitForce = 0
 
+    app.hittingPlayer = 0
+    app.hittingTarget = [None, None]
+    app.pottedBall = []
+    app.gameOver = False
+    app.win = False
+    app.winner = None
+
 
 def newGame(app):
     initializeTableGeometry(app)
     initializeBalls(app)
     initializeGamePlay(app)
 
+def changeHittingPlayer(app):
+    if app.hittingPlayer == 0:
+        app.hittingPlayer = 1
+    else:
+        app.hittingPlayer = 0
+
+def blackBallPotted(app):
+    for ball in app.pottedBall:
+        if ball.color == 'black':
+            return True
+    return False
+
+def targetBallLeft(app):
+    if app.hittingTarget[0] == None:
+        return True
+    else:
+        for ball in app.ballList:
+            if ball.color == app.hittingTarget[0]:
+                return True
+        return False
 
 def onMouseMove(app, mouseX, mouseY):
     app.mouseX = mouseX
@@ -334,6 +361,16 @@ def takeStep(app):
             ball.move(app)
 
     if app.moving == True and isAppStop(app):
+        if app.pottedBall == []:
+            pass
+        elif blackBallPotted(app):
+            app.gameOver = True
+            if targetBallLeft(app):
+                app.win = False
+            else:
+                app.win = True
+        elif app.hittingTarget[app.hittingPlayer] == None:
+            app.hittingTarget[app.hittingPlayer] = app.pottedBall[0].color
         app.moving = False
         app.aiming = True
 
@@ -345,14 +382,24 @@ def onKeyPress(app, key):
         takeStep(app)
     if key == "r":
         newGame(app)
+    testBlack = Ball("black", app.tableCenterX, app.tableCenterY)
+    if key == "w":
+        app.moving = True
+        app.ballList = []
 
 
 def redrawAll(app):
-    drawPoolTable(app)
-    drawBalls(app)
-    if app.aiming == True:
-        drawCueStick(app, app.aimingDirection)
-    drawLabel(f"Force:{app.hitForce}", app.width - 150, 150, size=32)
+    if app.gameOver == False:
+        drawPoolTable(app)
+        drawBalls(app)
+        if app.aiming == True:
+            drawCueStick(app, app.aimingDirection)
+        drawLabel(f"Force: {app.hitForce}", app.width - 150, 150, size=32)
+        drawLabel(f"Target: {app.hittingTarget[0]}", app.width - 150, 120, size=32)
+        drawLabel(f"Hitting Player: {app.hittingPlayer}", app.width - 150, 90, size=32)
+    else:
+        msg = "WIN" if app.win == True else "LOSE"
+        drawLabel(msg, app.width / 2, app.height / 2, size=40)
 
 
 def main():
