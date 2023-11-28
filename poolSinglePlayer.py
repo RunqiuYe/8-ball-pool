@@ -1,5 +1,5 @@
 from cmu_graphics import *
-import math
+import math, copy
 
 
 # Distance Helper Function
@@ -185,22 +185,20 @@ class Ball:
             other.vx = 0
             other.vy = 0
             return
-        CoefRes = 1  # Coefficient of restitution — 1 means elastic collision
         ballDistance = distance(self.cx, self.cy, other.cx, other.cy)
         normalDirection = [
             (self.cx - other.cx) / ballDistance,
             (self.cy - other.cy) / ballDistance,
         ]
-        CMVelocity = [(self.vx + other.vx) / 2, (self.vy + other.vy) / 2]
-        relVelocityMag = distance(self.vx, self.vy, other.vx, other.vy) / 2
+        relVelocityMag = distance(self.vx, self.vy, other.vx, other.vy)
         newRelVelocity = [
-            normalDirection[0] * relVelocityMag * CoefRes,
-            normalDirection[1] * relVelocityMag * CoefRes,
+            normalDirection[0] * relVelocityMag,
+            normalDirection[1] * relVelocityMag,
         ]
-        self.vx = CMVelocity[0] + newRelVelocity[0]
-        self.vy = CMVelocity[1] + newRelVelocity[1]
-        other.vx = CMVelocity[0] - newRelVelocity[0]
-        other.vy = CMVelocity[1] - newRelVelocity[1]
+        self.vx = self.vx + newRelVelocity[0]
+        self.vy = self.vy + newRelVelocity[1]
+        other.vx = other.vx - newRelVelocity[0] / 1.2
+        other.vy = other.vy - newRelVelocity[1] / 1.2
 
 
 # Drawing and initlization functions
@@ -216,7 +214,7 @@ def initializeBalls(app):
     initialY = app.tableCenterY
     dx = ballRadius * (math.sqrt(3) + 0.18)
     dy = ballRadius * 1.18
-    for i in range(1, 4):
+    for i in range(1, 6):
         for j in range(1, i + 1):
             ballCordX = initialX + (i - 1) * dx
             ballCordY = initialY + (i - 1) * dy - ballRadius * 2.1 * (j - 1)
@@ -279,6 +277,7 @@ def drawCueStick(app, aimingDirection):
 def drawAimingLine(app, aimingDirection):
     unitX = aimingDirection[0]
     unitY = aimingDirection[1]
+    aimingBallList = copy.copy(app.ballList[1:])
     collisionPointList = []
     tableLeft = app.tableCenterX - app.tableLength / 2
     tableRight = app.tableCenterX + app.tableLength / 2
@@ -288,7 +287,6 @@ def drawAimingLine(app, aimingDirection):
     curX = app.whiteBall.cx
     curY = app.whiteBall.cy
 
-    mouseDistance = distance(app.mouseX, app.mouseY, app.whiteBall.cx, app.whiteBall.cy)
     for t in range(600):
         curX = curX - unitX
         curY = curY - unitY
@@ -300,7 +298,15 @@ def drawAimingLine(app, aimingDirection):
             unitY = -unitY
         if t == 599:
             collisionPointList.append((curX, curY))
-    LineList = [(app.whiteBall.cx, app.whiteBall.cy)] + collisionPointList
+        for ball in aimingBallList:
+            if distance(curX, curY, ball.cx, ball.cy) < ball.radius * 2.1:
+                collisionPointList.append((curX, curY))
+                ballIndex = aimingBallList.index(ball)
+                aimingBallList.pop(ballIndex)
+                unitX = - (ball.cx - curX) / distance(curX, curY, ball.cx, ball.cy)
+                unitY = - (ball.cy - curY) / distance(curX, curY, ball.cx, ball.cy)
+    
+    LineList = [(app.whiteBall.cx, app.whiteBall.cy)] + collisionPointList  
 
     for i in range(len(LineList) - 1):
         startX, startY = LineList[i]

@@ -167,22 +167,20 @@ class Ball:
             other.vx = 0
             other.vy = 0
             return
-        CoefRes = 1  # Coefficient of restitution — 1 means elastic collision
         ballDistance = distance(self.cx, self.cy, other.cx, other.cy)
         normalDirection = [
             (self.cx - other.cx) / ballDistance,
             (self.cy - other.cy) / ballDistance,
         ]
-        CMVelocity = [(self.vx + other.vx) / 2, (self.vy + other.vy) / 2]
-        relVelocityMag = distance(self.vx, self.vy, other.vx, other.vy) / 2
+        relVelocityMag = distance(self.vx, self.vy, other.vx, other.vy)
         newRelVelocity = [
-            normalDirection[0] * relVelocityMag * CoefRes,
-            normalDirection[1] * relVelocityMag * CoefRes,
+            normalDirection[0] * relVelocityMag,
+            normalDirection[1] * relVelocityMag,
         ]
-        self.vx = CMVelocity[0] + newRelVelocity[0]
-        self.vy = CMVelocity[1] + newRelVelocity[1]
-        other.vx = CMVelocity[0] - newRelVelocity[0]
-        other.vy = CMVelocity[1] - newRelVelocity[1]
+        self.vx = self.vx + newRelVelocity[0]
+        self.vy = self.vy + newRelVelocity[1]
+        other.vx = other.vx - newRelVelocity[0] / 1.2
+        other.vy = other.vy - newRelVelocity[1] / 1.2
 
 
 # Drawing and initlization functions
