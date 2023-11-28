@@ -1,5 +1,5 @@
 from cmu_graphics import *
-import math
+import math, copy
 
 
 # Distance Helper Function
@@ -262,6 +262,7 @@ def drawCueStick(app, aimingDirection):
 def drawAimingLine(app, aimingDirection):
     unitX = aimingDirection[0]
     unitY = aimingDirection[1]
+    aimingBallList = copy.copy(app.ballList[1:])
     collisionPointList = []
     tableLeft = app.tableCenterX - app.tableLength / 2
     tableRight = app.tableCenterX + app.tableLength / 2
@@ -271,7 +272,6 @@ def drawAimingLine(app, aimingDirection):
     curX = app.whiteBall.cx
     curY = app.whiteBall.cy
 
-    mouseDistance = distance(app.mouseX, app.mouseY, app.whiteBall.cx, app.whiteBall.cy)
     for t in range(600):
         curX = curX - unitX
         curY = curY - unitY
@@ -283,7 +283,30 @@ def drawAimingLine(app, aimingDirection):
             unitY = -unitY
         if t == 599:
             collisionPointList.append((curX, curY))
-    LineList = [(app.whiteBall.cx, app.whiteBall.cy)] + collisionPointList
+        for ball in aimingBallList:
+            if distance(curX, curY, ball.cx, ball.cy) < ball.radius * 2.1:
+                collisionPointList.append((curX, curY))
+                ballIndex = aimingBallList.index(ball)
+                aimingBallList.pop(ballIndex)
+                unitX = - (ball.cx - curX) / distance(curX, curY, ball.cx, ball.cy)
+                unitY = - (ball.cy - curY) / distance(curX, curY, ball.cx, ball.cy)
+    
+    LineList = [(app.whiteBall.cx, app.whiteBall.cy)] + collisionPointList  
+    
+    # if ballCollisionPointList == []:
+    #     LineList = [(app.whiteBall.cx, app.whiteBall.cy)] + collisionPointList  
+    # else:
+    #     anotherCollision = False
+    #     for t in range(100):
+    #         curX = curX - unitX
+    #         curY = curY - unitY
+    #         if curX > tableRight or curX < tableLeft:
+    #             collisionPointList.append((curX, curY))
+    #             unitX = -unitX
+    #         if curY > tableBot or curY < tableTop:
+    #             collisionPointList.append((curX, curY))
+    #             unitY = -unitY
+    #     LineList = [(app.whiteBall.cx, app.whiteBall.cy)] + collisionPointList  
 
     for i in range(len(LineList) - 1):
         startX, startY = LineList[i]

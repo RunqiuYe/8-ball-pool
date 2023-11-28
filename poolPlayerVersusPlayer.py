@@ -214,8 +214,8 @@ def initializeBalls(app):
     ballRadius = 6.8 * 1.5
     initialX = app.tableCenterX + app.tableLength / 4
     initialY = app.tableCenterY
-    dx = ballRadius * (math.sqrt(3) + 0.05)
-    dy = ballRadius * 1.05
+    dx = ballRadius * (math.sqrt(3) + 0.18)
+    dy = ballRadius * 1.18
     for i in range(1, 6):
         for j in range(1, i + 1):
             ballCordX = initialX + (i - 1) * dx
@@ -274,6 +274,38 @@ def drawCueStick(app, aimingDirection):
     endX = app.whiteBall.cx + cueLength * unitX
     endY = app.whiteBall.cy + cueLength * unitY
     drawLine(startX, startY, endX, endY, lineWidth=5)
+
+
+def drawAimingLine(app, aimingDirection):
+    unitX = aimingDirection[0]
+    unitY = aimingDirection[1]
+    collisionPointList = []
+    tableLeft = app.tableCenterX - app.tableLength / 2
+    tableRight = app.tableCenterX + app.tableLength / 2
+    tableTop = app.tableCenterY - app.tableWidth / 2
+    tableBot = app.tableCenterY + app.tableWidth / 2
+
+    curX = app.whiteBall.cx
+    curY = app.whiteBall.cy
+
+    mouseDistance = distance(app.mouseX, app.mouseY, app.whiteBall.cx, app.whiteBall.cy)
+    for t in range(600):
+        curX = curX - unitX
+        curY = curY - unitY
+        if curX > tableRight or curX < tableLeft:
+            collisionPointList.append((curX, curY))
+            unitX = -unitX
+        if curY > tableBot or curY < tableTop:
+            collisionPointList.append((curX, curY))
+            unitY = -unitY
+        if t == 599:
+            collisionPointList.append((curX, curY))
+    LineList = [(app.whiteBall.cx, app.whiteBall.cy)] + collisionPointList
+
+    for i in range(len(LineList) - 1):
+        startX, startY = LineList[i]
+        endX, endY = LineList[i + 1]
+        drawLine(startX, startY, endX, endY, fill="white", opacity=80)
 
 
 def isAppStop(app):
@@ -440,10 +472,6 @@ def onKeyPress(app, key):
         takeStep(app)
     if key == "r":
         newGame(app)
-    testBlack = Ball("black", app.tableCenterX, app.tableCenterY)
-    if key == "w":
-        app.moving = True
-        app.ballList = []
 
 
 def redrawAll(app):
@@ -452,6 +480,7 @@ def redrawAll(app):
         drawBalls(app)
         if app.aiming == True:
             drawCueStick(app, app.aimingDirection)
+            drawAimingLine(app, app.aimingDirection)
         drawLabel(f"Force: {app.hitForce}", app.width - 150, 150, size=25)
         drawLabel(
             f"Player 1 Target: {app.hittingTarget[1]}", app.width - 150, 120, size=25

@@ -192,7 +192,7 @@ class Ball:
 # Initialize pool balls
 def initializeBalls(app):
     app.ball1 = Ball("red", app.tableCenterX - app.tableLength / 4, app.tableCenterY)
-    app.ball2 = Ball("yellow", app.tableCenterX + app.tableLength / 4, app.tableCenterY)
+    app.ball2 = Ball("yellow", app.tableCenterX + app.tableLength / 4, app.tableCenterY + app.ball1.radius)
     app.ballList = [app.ball1, app.ball2]
 
 # Draw pool balls
@@ -251,8 +251,8 @@ def takeStep(app):
 
 def onKeyPress(app, key):
     if key == "z":
-        app.ballList[0].vx = 100
-        # app.ballList[0].vx = 20
+        # app.ballList[0].vx = 100
+        app.ballList[0].vx = 20
     if key == "s":
         takeStep(app)
     if key == "r":
