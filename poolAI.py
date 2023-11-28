@@ -274,44 +274,48 @@ def drawCueStick(app, aimingDirection):
     drawLine(startX, startY, endX, endY, lineWidth=5)
 
 
-def drawAimingLine(app, aimingDirection):
-    unitX = aimingDirection[0]
-    unitY = aimingDirection[1]
-    aimingBallList = copy.copy(app.ballList[1:])
-    collisionPointList = []
+def findBestHit(app):
     tableLeft = app.tableCenterX - app.tableLength / 2
     tableRight = app.tableCenterX + app.tableLength / 2
     tableTop = app.tableCenterY - app.tableWidth / 2
     tableBot = app.tableCenterY + app.tableWidth / 2
+    resultList = [0] * 73
+    aimingBallList = copy.copy(app.ballList[1:])
 
-    curX = app.whiteBall.cx
-    curY = app.whiteBall.cy
+    for i in range(73):
+        aimingAngle = i * 5
+        aimingAngleRad = aimingAngle * math.pi / 180
+        aimingDirection = [math.cos(aimingAngleRad), math.sin(aimingAngleRad)]
+        unitX = aimingDirection[0]
+        unitY = aimingDirection[1]
 
-    for t in range(600):
-        curX = curX - unitX
-        curY = curY - unitY
-        if curX > tableRight or curX < tableLeft:
-            collisionPointList.append((curX, curY))
-            unitX = -unitX
-        if curY > tableBot or curY < tableTop:
-            collisionPointList.append((curX, curY))
-            unitY = -unitY
-        if t == 599:
-            collisionPointList.append((curX, curY))
-        for ball in aimingBallList:
-            if distance(curX, curY, ball.cx, ball.cy) < ball.radius * 1.9:
+        collisionPointList = []
+        collisionBallList = []
+
+        curX = app.whiteBall.cx
+        curY = app.whiteBall.cy
+
+        for t in range(600):
+            curX = curX - unitX
+            curY = curY - unitY
+            if curX > tableRight or curX < tableLeft:
                 collisionPointList.append((curX, curY))
-                ballIndex = aimingBallList.index(ball)
-                aimingBallList.pop(ballIndex)
-                unitX = - (ball.cx - curX) / distance(curX, curY, ball.cx, ball.cy)
-                unitY = - (ball.cy - curY) / distance(curX, curY, ball.cx, ball.cy)
-    
-    LineList = [(app.whiteBall.cx, app.whiteBall.cy)] + collisionPointList  
+                unitX = -unitX
+            if curY > tableBot or curY < tableTop:
+                collisionPointList.append((curX, curY))
+                unitY = -unitY
+            if t == 599:
+                collisionPointList.append((curX, curY))
+            for ball in aimingBallList:
+                if distance(curX, curY, ball.cx, ball.cy) < ball.radius * 2:
+                    collisionPointList.append((curX, curY))
+                    ballIndex = aimingBallList.index(ball)
+                    aimingBallList.pop(ballIndex)
+                    unitX = - (ball.cx - curX) / distance(curX, curY, ball.cx, ball.cy)
+                    unitY = - (ball.cy - curY) / distance(curX, curY, ball.cx, ball.cy)
 
-    for i in range(len(LineList) - 1):
-        startX, startY = LineList[i]
-        endX, endY = LineList[i + 1]
-        drawLine(startX, startY, endX, endY, fill="white", opacity=80)
+        LineList = [(app.whiteBall.cx, app.whiteBall.cy)] + collisionPointList
+
 
 
 def isAppStop(app):
@@ -345,13 +349,6 @@ def newGame(app):
     initializeTableGeometry(app)
     initializeBalls(app)
     initializeGamePlay(app)
-
-
-def changeHittingPlayer(app):
-    if app.hittingPlayer == 0:
-        app.hittingPlayer = 1
-    else:
-        app.hittingPlayer = 0
 
 
 def blackBallPotted(app):
@@ -462,7 +459,6 @@ def redrawAll(app):
         drawBalls(app)
         if app.aiming == True:
             drawCueStick(app, app.aimingDirection)
-            drawAimingLine(app, app.aimingDirection)
         drawLabel(f"Force: {app.hitForce}", app.width - 150, 150, size=32)
         drawLabel(f"Target: {app.hittingTarget[0]}", app.width - 150, 120, size=32)
         drawLabel(f"Hitting Player: {app.hittingPlayer}", app.width - 150, 90, size=32)

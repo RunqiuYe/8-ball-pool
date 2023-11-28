@@ -299,7 +299,7 @@ def drawAimingLine(app, aimingDirection):
         if t == 599:
             collisionPointList.append((curX, curY))
         for ball in aimingBallList:
-            if distance(curX, curY, ball.cx, ball.cy) < ball.radius * 2.1:
+            if distance(curX, curY, ball.cx, ball.cy) < ball.radius * 2:
                 collisionPointList.append((curX, curY))
                 ballIndex = aimingBallList.index(ball)
                 aimingBallList.pop(ballIndex)
