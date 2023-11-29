@@ -416,7 +416,6 @@ def onStep(app):
 
 def takeStep(app):
     if app.moving == True:
-        print(app.whiteBall.vx, app.whiteBall.vy)
         for i in range(len(app.ballList) - 1):
             for j in range(i + 1, len(app.ballList)):
                 ball1 = app.ballList[i]
@@ -447,14 +446,11 @@ def takeStep(app):
         app.aiming = True
 
     if app.aiming == True:
-        print("evaluating")
         app.aimingDirection, app.hitForce = findBestHit(app)
         app.whiteBall.vx = - app.hitForce * app.aimingDirection[0]
         app.whiteBall.vy = - app.hitForce * app.aimingDirection[1]
-        print(app.whiteBall.vx, app.whiteBall.vy)
         app.aiming = False
         app.moving = True
-        print(app.moving, app.aiming)
 
 
 def onKeyPress(app, key):

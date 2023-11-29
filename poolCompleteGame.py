@@ -18,7 +18,7 @@ def distance(x1, y1, x2, y2):
 # Initialize table geometry, including pocket locations
 def initializeTableGeometry(app):
     app.width = 1000
-    app.height = 800
+    app.height = 750
     app.tableCenterX = app.width / 2
     app.tableCenterY = app.height / 2
     app.tableWidth = 120 * 3
@@ -197,8 +197,8 @@ class Ball:
         ]
         self.vx = self.vx + newRelVelocity[0]
         self.vy = self.vy + newRelVelocity[1]
-        other.vx = other.vx - newRelVelocity[0] / 1.2
-        other.vy = other.vy - newRelVelocity[1] / 1.2
+        other.vx = other.vx - newRelVelocity[0] / 1.3
+        other.vy = other.vy - newRelVelocity[1] / 1.3
 
 
 # Drawing and initlization functions
@@ -249,15 +249,6 @@ def drawBalls(app):
 
 
 # ========================================================================
-# Game initializations (newGame)
-# ========================================================================
-
-
-def onAppStart(app):
-    newGame(app)
-
-
-# ========================================================================
 # cue stick functions (drawing)
 # ========================================================================
 
@@ -266,7 +257,7 @@ def drawCueStick(app, aimingDirection):
     ballRad = app.whiteBall.radius
     unitX = aimingDirection[0]
     unitY = aimingDirection[1]
-    cueLength = 150 * 2
+    cueLength = 160 * 2
     startX = app.whiteBall.cx + 2 * ballRad * unitX
     startY = app.whiteBall.cy + 2 * ballRad * unitY
     endX = app.whiteBall.cx + cueLength * unitX
@@ -303,14 +294,14 @@ def drawAimingLine(app, aimingDirection):
         if t == 599:
             collisionPointList.append((curX, curY))
         for ball in aimingBallList:
-            if distance(curX, curY, ball.cx, ball.cy) < ball.radius * 1.9:
+            if distance(curX, curY, ball.cx, ball.cy) < ball.radius * 1.95:
                 collisionPointList.append((curX, curY))
                 ballIndex = aimingBallList.index(ball)
                 aimingBallList.pop(ballIndex)
-                unitX = - (ball.cx - curX) / distance(curX, curY, ball.cx, ball.cy)
-                unitY = - (ball.cy - curY) / distance(curX, curY, ball.cx, ball.cy)
-    
-    LineList = [(app.whiteBall.cx, app.whiteBall.cy)] + collisionPointList  
+                unitX = -(ball.cx - curX) / distance(curX, curY, ball.cx, ball.cy)
+                unitY = -(ball.cy - curY) / distance(curX, curY, ball.cx, ball.cy)
+
+    LineList = [(app.whiteBall.cx, app.whiteBall.cy)] + collisionPointList
 
     for i in range(len(LineList) - 1):
         startX, startY = LineList[i]
@@ -328,21 +319,12 @@ def isAppStop(app):
 # ========================================================================
 # Main functions (onAppStart, redrawAll, takeStep, onKeyPress)
 # ========================================================================
-def initializeGamePlay(app):
-    app.mouseX = 0
-    app.mouseY = 0
-    app.aiming = True
-    app.holding = False
-    app.moving = False
-    app.aimingDirection = [1, 1]
-    app.hitForce = 0
 
-    app.hittingPlayer = 0
-    app.hittingTarget = [None, None]
-    app.pottedBall = []
-    app.gameOver = False
-    app.win = False
-    app.winner = None
+
+# Game initializations (newGame)
+# ========================================================================
+def onAppStart(app):
+    newGame(app)
 
 
 def newGame(app):
@@ -351,11 +333,28 @@ def newGame(app):
     initializeGamePlay(app)
 
 
+def initializeGamePlay(app):
+    # There are a total of three scenes: starting, playing, and ending
+    app.scene = "starting"
+
+    app.mouseX = 0
+    app.mouseY = 0
+    app.aiming = False
+    app.holding = False
+    app.moving = False
+    app.aimingDirection = [1, 1]
+    app.hitForce = 0
+
+
 def changeHittingPlayer(app):
     if app.hittingPlayer == 0:
         app.hittingPlayer = 1
     else:
         app.hittingPlayer = 0
+
+
+# Check potted ball helper functions
+# ========================================================================
 
 
 def blackBallPotted(app):
@@ -372,14 +371,34 @@ def whiteBallPotted(app):
     return False
 
 
-def targetBallLeft(app):
-    if app.hittingTarget[0] == None:
-        return True
-    else:
+def targetBallLeft(app, target):
+    if app.mode == "single":
         for ball in app.ballList:
-            if ball.color == app.hittingTarget[0]:
+            if app.color != "black" or app.color != "white":
                 return True
         return False
+    else:
+        if target == None:
+            return True
+        else:
+            for ball in app.ballList:
+                if ball.color == target:
+                    return True
+            return False
+
+
+def targetBallPotted(app):
+    target = app.hittingTarget[app.hittingPlayer]
+    if target == None:
+        return True
+    for ball in app.pottedBall:
+        if ball.color == target:
+            return True
+    return False
+
+
+# Controller functions
+# ========================================================================
 
 
 def onMouseMove(app, mouseX, mouseY):
@@ -396,18 +415,38 @@ def onMouseMove(app, mouseX, mouseY):
 
 
 def onMousePress(app, mouseX, mouseY):
-    if app.aiming == True:
-        app.holding = True
+    if app.scene == "playing":
+        if app.aiming == True:
+            app.holding = True
 
 
 def onMouseRelease(app, mouseX, mouseY):
-    if app.aiming == True:
-        app.aiming = False
-        app.holding = False
-        app.moving = True
-        app.whiteBall.vx = -app.hitForce * app.aimingDirection[0]
-        app.whiteBall.vy = -app.hitForce * app.aimingDirection[1]
-        app.hitForce = 0
+    if app.scene == "starting":
+        if clickChooseMode != None:
+            app.mode = clickChooseMode(app, mouseX, mouseY)
+
+        if app.mode == "pvp":
+            app.hittingPlayer = 0
+            app.hittingTarget = [None, None]
+            app.pottedBall = []
+            app.gameOver = False
+            app.winner = None
+        if app.mode == "single":
+            app.pottedBall = []
+            app.gameOver = False
+            app.winner = False
+
+        app.scene = "playing"
+        app.aiming = True
+
+    if app.scene == "playing":
+        if app.aiming == True:
+            app.aiming = False
+            app.holding = False
+            app.moving = True
+            app.whiteBall.vx = -app.hitForce * app.aimingDirection[0]
+            app.whiteBall.vy = -app.hitForce * app.aimingDirection[1]
+            app.hitForce = 0
 
 
 def onStep(app):
@@ -415,38 +454,84 @@ def onStep(app):
 
 
 def takeStep(app):
-    if app.holding == True:
-        app.hitForce += 1
+    if app.scene == "playing":
+        if app.holding == True:
+            app.hitForce += 1
 
-    if app.moving == True:
-        for i in range(len(app.ballList) - 1):
-            for j in range(i + 1, len(app.ballList)):
-                ball1 = app.ballList[i]
-                ball2 = app.ballList[j]
-                if distance(ball1.cx, ball1.cy, ball2.cx, ball2.cy) <= 2 * ball1.radius:
-                    ball1.move(app, -1)
-                    ball2.move(app, -1)
-                    ball1.collide(ball2, app)
+        if app.moving == True:
+            for i in range(len(app.ballList) - 1):
+                for j in range(i + 1, len(app.ballList)):
+                    ball1 = app.ballList[i]
+                    ball2 = app.ballList[j]
+                    if (
+                        distance(ball1.cx, ball1.cy, ball2.cx, ball2.cy)
+                        <= 1.95 * ball1.radius
+                    ):
+                        ball1.move(app, -1)
+                        ball2.move(app, -1)
+                        ball1.collide(ball2, app)
 
-        for ball in app.ballList:
-            ball.move(app)
+            for ball in app.ballList:
+                ball.move(app)
 
-    if app.moving == True and isAppStop(app):
-        if whiteBallPotted(app):
-            app.gameOver = True
-            app.win = False
-        if app.pottedBall == []:
-            pass
-        elif blackBallPotted(app):
-            app.gameOver = True
-            if targetBallLeft(app):
-                app.win = False
-            else:
-                app.win = True
-        elif app.hittingTarget[app.hittingPlayer] == None:
-            app.hittingTarget[app.hittingPlayer] = app.pottedBall[0].color
-        app.moving = False
-        app.aiming = True
+        if app.mode == "single":
+            if app.moving == True and isAppStop(app):
+                if whiteBallPotted(app):
+                    app.gameOver = True
+                    app.scene = "ending"
+                    app.win = False
+                elif blackBallPotted(app):
+                    if targetBallLeft(app, currentPlayerTarget):
+                        app.win = False
+                    else:
+                        app.win = True
+                    app.gameOver = True
+                    app.scene = "ending"
+
+                app.pottedBall = []
+                app.moving = False
+                app.aiming = True
+
+        if app.mode == "pvp":
+            # Change hitting player and update winner
+            # ================================================================
+            # When all the balls stop moving, change game status based on potted balls.
+            # If no ball is potted, change hitting player.
+            # If black ball is potted, the hitting player wins if the black ball should be potted now.
+            # Otherwise, if the black ball should not be potted now, the other player wins.
+            # If the white ball is potted, the other player wins.
+            # If the hitting player potted a target ball, he continues to hit.
+            # If the first ball is potted, set the target for both players.
+
+            if app.moving == True and isAppStop(app):
+                currentPlayerTarget = app.hittingTarget[app.hittingPlayer]
+                if app.pottedBall == []:
+                    changeHittingPlayer(app)
+                elif whiteBallPotted(app):
+                    app.gameOver = True
+                    app.scene = "ending"
+                    otherPlayer = 1 if app.hittingPlayer == 0 else 0
+                    app.winner = otherPlayer
+                elif blackBallPotted(app):
+                    app.gameOver = True
+                    app.scene = "ending"
+                    if targetBallLeft(app, currentPlayerTarget):
+                        app.winner = 1 if app.hittingPlayer == 0 else 0
+                    else:
+                        app.winner = app.hittingPlayer
+                elif not targetBallPotted(app):
+                    changeHittingPlayer(app)
+                elif app.hittingTarget[app.hittingPlayer] == None:
+                    app.hittingTarget[app.hittingPlayer] = app.pottedBall[0].color
+                    otherPlayer = 1 if app.hittingPlayer == 0 else 0
+                    otherColor = (
+                        "red" if app.pottedBall[0].color == "yellow" else "yellow"
+                    )
+                    app.hittingTarget[otherPlayer] = otherColor
+
+                app.pottedBall = []
+                app.moving = False
+                app.aiming = True
 
 
 def onKeyPress(app, key):
@@ -454,25 +539,86 @@ def onKeyPress(app, key):
         takeStep(app)
     if key == "r":
         newGame(app)
-    testBlack = Ball("black", app.tableCenterX, app.tableCenterY)
-    if key == "w":
-        app.moving = True
-        app.ballList = []
 
 
 def redrawAll(app):
-    if app.gameOver == False:
-        drawPoolTable(app)
-        drawBalls(app)
-        if app.aiming == True:
-            drawCueStick(app, app.aimingDirection)
-            drawAimingLine(app, app.aimingDirection)
-        drawLabel(f"Force: {app.hitForce}", app.width - 150, 150, size=32)
-        drawLabel(f"Target: {app.hittingTarget[0]}", app.width - 150, 120, size=32)
-        drawLabel(f"Hitting Player: {app.hittingPlayer}", app.width - 150, 90, size=32)
-    else:
+    if app.scene == "starting":
+        drawStarting(app)
+    if app.scene == "playing":
+        drawPlaying(app)
+    if app.scene == "ending":
+        drawEnding(app)
+
+
+def drawStarting(app):
+    drawLabel("Classic 8-ball Pool", app.width / 2, app.height * 1 / 5, size=48)
+    drawRect(
+        app.width / 2,
+        app.height * 2 / 5,
+        450,
+        100,
+        align="center",
+        fill=None,
+        border="black",
+    )
+    drawLabel("Single Player Mode", app.width / 2, app.height * 2 / 5, size=32)
+    drawRect(
+        app.width / 2,
+        app.height * 3 / 5,
+        450,
+        100,
+        align="center",
+        fill=None,
+        border="black",
+    )
+    drawLabel("Player vs Player Mode", app.width / 2, app.height * 3 / 5, size=32)
+    drawRect(
+        app.width / 2,
+        app.height * 4 / 5,
+        450,
+        100,
+        align="center",
+        fill=None,
+        border="black",
+    )
+    drawLabel("Player vs Computer Mode", app.width / 2, app.height * 4 / 5, size=32)
+
+
+def clickChooseMode(app, x, y):
+    if app.width / 2 - 450 / 2 <= x <= app.width / 2 + 450 / 2:
+        if app.height * 2 / 5 - 100 / 2 <= y <= app.height * 2 / 5 + 100 / 2:
+            return "single"
+        elif app.height * 3 / 5 - 100 / 2 <= y <= app.height * 3 / 5 + 100 / 2:
+            return "pvp"
+        elif app.height * 4 / 5 - 100 / 2 <= y <= app.height * 4 / 5 + 100 / 2:
+            return "pvc"
+
+
+def drawPlaying(app):
+    drawPoolTable(app)
+    drawBalls(app)
+    drawLabel(f"Force: {app.hitForce}", app.width - 150, 130, size=25)
+
+    if app.aiming == True:
+        drawCueStick(app, app.aimingDirection)
+        drawAimingLine(app, app.aimingDirection)
+
+    if app.mode == "pvp":
+        drawLabel(
+            f"Player 1 Target: {app.hittingTarget[1]}", app.width - 150, 110, size=25
+        )
+        drawLabel(
+            f"Player 0 Target: {app.hittingTarget[0]}", app.width - 150, 90, size=25
+        )
+        drawLabel(f"Hitting Player: {app.hittingPlayer}", app.width - 150, 70, size=25)
+
+
+def drawEnding(app):
+    if app.mode == "single":
         msg = "WIN" if app.win == True else "LOSE"
-        drawLabel(msg, app.width / 2, app.height / 2, size=40)
+        drawLabel(msg, app.width/2, app.height/2, size=48)
+    if app.mode == "pvp":
+        drawLabel(f"PLAYER {app.winner} WINS", app.width/2, app.height/2, size=48)
 
 
 def main():

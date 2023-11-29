@@ -197,8 +197,8 @@ class Ball:
         ]
         self.vx = self.vx + newRelVelocity[0]
         self.vy = self.vy + newRelVelocity[1]
-        other.vx = other.vx - newRelVelocity[0] / 1.2
-        other.vy = other.vy - newRelVelocity[1] / 1.2
+        other.vx = other.vx - newRelVelocity[0] / 1.3
+        other.vy = other.vy - newRelVelocity[1] / 1.3
 
 
 # Drawing and initlization functions
@@ -291,15 +291,19 @@ def drawAimingLine(app, aimingDirection):
         curX = curX - unitX
         curY = curY - unitY
         if curX > tableRight or curX < tableLeft:
+            curX = curX + unitX
+            curY = curY + unitY
             collisionPointList.append((curX, curY))
             unitX = -unitX
         if curY > tableBot or curY < tableTop:
+            curX = curX + unitX
+            curY = curY + unitY
             collisionPointList.append((curX, curY))
             unitY = -unitY
         if t == 599:
             collisionPointList.append((curX, curY))
         for ball in aimingBallList:
-            if distance(curX, curY, ball.cx, ball.cy) < ball.radius * 2:
+            if distance(curX, curY, ball.cx, ball.cy) < ball.radius * 1.9:
                 collisionPointList.append((curX, curY))
                 ballIndex = aimingBallList.index(ball)
                 aimingBallList.pop(ballIndex)
