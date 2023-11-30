@@ -387,7 +387,7 @@ def evaluateHit(app, aimingAngle):
                     or collisionBallList[-1].color == app.hittingTarget[1]
                 ):
                     coef = 0.95 ** len(collisionPointList)
-                    return (100 * coef, max(1.2 * math.sqrt(t), 25))
+                    return (100 * coef, min(1.2 * math.sqrt(t), 25))
                 else:
                     return (-100, 20)
 
