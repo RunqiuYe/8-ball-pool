@@ -1,6 +1,6 @@
 from cmu_graphics import *
 import math, copy
-
+import random
 
 # Distance Helper Function
 def distance(x1, y1, x2, y2):
@@ -347,6 +347,8 @@ def findBestHit(app):
     bestIndex = findListMax(resultList)
     bestAngle = 5 * bestIndex
     bestForce = forceList[bestIndex]
+    if bestAngle == 0 and resultList[0] == 0:
+        bestAngle = random.randint(0, 360)
     return (
         [-math.cos(bestAngle * math.pi / 180), -math.sin(bestAngle * math.pi / 180)],
         bestForce,
@@ -377,9 +379,13 @@ def evaluateHit(app, aimingAngle):
 
         if inPocket(app, curX, curY):
             if collisionBallList == [] or collisionBallList[-1].color == "black":
-                return (-100, 20)
+                return (-200, 20)
             else:
-                return (100, math.sqrt(t))
+                if app.hittingTarget[1] == None or collisionBallList[-1].color == app.hittingTarget[1]:
+                    coef = 0.95 ** len(collisionPointList)
+                    return (100 * coef, max(1.2*math.sqrt(t), 25))
+                else:
+                    return (-100, 20)
 
         if curX > tableRight or curX < tableLeft:
             curX = curX + unitX
@@ -463,7 +469,7 @@ def whiteBallPotted(app):
 def targetBallLeft(app, target):
     if app.mode == "single":
         for ball in app.ballList:
-            if app.color != "black" or app.color != "white":
+            if ball.color != "black" or ball.color != "white":
                 return True
         return False
     else:
@@ -545,7 +551,7 @@ def onStep(app):
 def takeStep(app):
     if app.scene == "playing":
         if app.holding == True:
-            app.hitForce += 1
+            app.hitForce += 1 if app.hitForce <= 25 else 0
 
         if app.moving == True:
             for i in range(len(app.ballList) - 1):
@@ -564,6 +570,7 @@ def takeStep(app):
                 ball.move(app)
 
         if app.mode == "single":
+            currentPlayerTarget = None
             if app.moving == True and isAppStop(app):
                 if whiteBallPotted(app):
                     app.gameOver = True
@@ -698,7 +705,7 @@ def drawPlaying(app):
     drawLabel(f"Force: {app.hitForce}", app.width - 150, 130, size=25)
 
     if app.aiming == True:
-        if app.mode == "pvp" or (app.mode == "pvc" and app.hittingPlayer == 0):
+        if app.mode == "pvp" or app.mode == "single" or (app.mode == "pvc" and app.hittingPlayer == 0):
             drawCueStick(app, app.aimingDirection)
             drawAimingLine(app, app.aimingDirection)
 
