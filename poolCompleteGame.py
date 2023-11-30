@@ -580,16 +580,16 @@ def takeStep(app):
                 app.pottedBall = []
                 app.moving = False
                 app.aiming = True
-        
+
         if app.mode == "pvc":
             if app.aiming == True and app.hittingPlayer == 1:
                 app.aimingDirection, app.hitForce = findBestHit(app)
-                app.whiteBall.vx = - app.hitForce * app.aimingDirection[0]
-                app.whiteBall.vy = - app.hitForce * app.aimingDirection[1]
+                app.whiteBall.vx = -app.hitForce * app.aimingDirection[0]
+                app.whiteBall.vy = -app.hitForce * app.aimingDirection[1]
                 app.aiming = False
                 app.moving = True
                 app.hitForce = 0
-        
+
         if app.mode == "pvp" or app.mode == "pvc":
             # Change hitting player and update winner
             # ================================================================
@@ -705,7 +705,10 @@ def drawPlaying(app):
     if app.mode == "pvp" or app.mode == "pvc":
         if app.mode == "pvc":
             drawLabel(
-                f"Computer Target: {app.hittingTarget[1]}", app.width - 150, 110, size=25
+                f"Computer Target: {app.hittingTarget[1]}",
+                app.width - 150,
+                110,
+                size=25,
             )
             drawLabel(
                 f"Player Target: {app.hittingTarget[0]}", app.width - 150, 90, size=25
@@ -715,23 +718,28 @@ def drawPlaying(app):
 
         else:
             drawLabel(
-                f"Player 1 Target: {app.hittingTarget[1]}", app.width - 150, 110, size=25
+                f"Player 1 Target: {app.hittingTarget[1]}",
+                app.width - 150,
+                110,
+                size=25,
             )
             drawLabel(
                 f"Player 0 Target: {app.hittingTarget[0]}", app.width - 150, 90, size=25
             )
-            drawLabel(f"Hitting Player: {app.hittingPlayer}", app.width - 150, 70, size=25)
+            drawLabel(
+                f"Hitting Player: {app.hittingPlayer}", app.width - 150, 70, size=25
+            )
 
 
 def drawEnding(app):
     if app.mode == "single":
         message = "WIN" if app.win == True else "LOSE"
-        drawLabel(message, app.width/2, app.height/2, size=48)
+        drawLabel(message, app.width / 2, app.height / 2, size=48)
     if app.mode == "pvp":
-        drawLabel(f"PLAYER {app.winner} WINS", app.width/2, app.height/2, size=48)
+        drawLabel(f"PLAYER {app.winner} WINS", app.width / 2, app.height / 2, size=48)
     if app.mode == "pvc":
         winner = "COMPUTER" if app.winner == 1 else "PLAYER"
-        drawLabel(f"{winner} WINS", app.width/2, app.height/2, size=48)
+        drawLabel(f"{winner} WINS", app.width / 2, app.height / 2, size=48)
 
 
 def main():
