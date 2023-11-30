@@ -2,6 +2,7 @@ from cmu_graphics import *
 import math, copy
 import random
 
+
 # Distance Helper Function
 def distance(x1, y1, x2, y2):
     return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
@@ -381,9 +382,12 @@ def evaluateHit(app, aimingAngle):
             if collisionBallList == [] or collisionBallList[-1].color == "black":
                 return (-200, 20)
             else:
-                if app.hittingTarget[1] == None or collisionBallList[-1].color == app.hittingTarget[1]:
+                if (
+                    app.hittingTarget[1] == None
+                    or collisionBallList[-1].color == app.hittingTarget[1]
+                ):
                     coef = 0.95 ** len(collisionPointList)
-                    return (100 * coef, max(1.2*math.sqrt(t), 25))
+                    return (100 * coef, max(1.2 * math.sqrt(t), 25))
                 else:
                     return (-100, 20)
 
@@ -705,7 +709,11 @@ def drawPlaying(app):
     drawLabel(f"Force: {app.hitForce}", app.width - 150, 130, size=25)
 
     if app.aiming == True:
-        if app.mode == "pvp" or app.mode == "single" or (app.mode == "pvc" and app.hittingPlayer == 0):
+        if (
+            app.mode == "pvp"
+            or app.mode == "single"
+            or (app.mode == "pvc" and app.hittingPlayer == 0)
+        ):
             drawCueStick(app, app.aimingDirection)
             drawAimingLine(app, app.aimingDirection)
 
