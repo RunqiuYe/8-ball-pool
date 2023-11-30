@@ -317,6 +317,94 @@ def isAppStop(app):
 
 
 # ========================================================================
+# Pool AI Functions
+# ========================================================================
+
+
+def inPocket(app, x, y):
+    for pocketX, pocketY in app.pocketLocations:
+        if distance(x, y, pocketX, pocketY) <= app.pocketRadius:
+            return True
+    return False
+
+
+def findListMax(L):
+    maxValue = -100
+    maxIndex = 0
+    for i in range(len(L)):
+        if L[i] > maxValue:
+            maxIndex = i
+            maxValue = L[i]
+    return maxIndex
+
+
+def findBestHit(app):
+    resultList = [0] * 73
+    forceList = [20] * 73
+    for i in range(73):
+        aimingAngle = i * 5
+        resultList[i], forceList[i] = evaluateHit(app, aimingAngle)
+    bestIndex = findListMax(resultList)
+    bestAngle = 5 * bestIndex
+    bestForce = forceList[bestIndex]
+    return (
+        [-math.cos(bestAngle * math.pi / 180), -math.sin(bestAngle * math.pi / 180)],
+        bestForce,
+    )
+
+
+def evaluateHit(app, aimingAngle):
+    tableLeft = app.tableCenterX - app.tableLength / 2
+    tableRight = app.tableCenterX + app.tableLength / 2
+    tableTop = app.tableCenterY - app.tableWidth / 2
+    tableBot = app.tableCenterY + app.tableWidth / 2
+    aimingBallList = copy.copy(app.ballList[1:])
+
+    aimingAngleRad = aimingAngle * math.pi / 180
+    aimingDirection = [-math.cos(aimingAngleRad), -math.sin(aimingAngleRad)]
+    unitX = aimingDirection[0]
+    unitY = aimingDirection[1]
+
+    collisionPointList = []
+    collisionBallList = []
+
+    curX = app.whiteBall.cx
+    curY = app.whiteBall.cy
+
+    for t in range(600):
+        curX = curX - unitX
+        curY = curY - unitY
+
+        if inPocket(app, curX, curY):
+            if collisionBallList == [] or collisionBallList[-1].color == "black":
+                return (-100, 20)
+            else:
+                return (100, math.sqrt(t))
+
+        if curX > tableRight or curX < tableLeft:
+            curX = curX + unitX
+            curY = curY - unitY
+            collisionPointList.append((curX, curY))
+            unitX = -unitX
+        if curY > tableBot or curY < tableTop:
+            curX = curX + unitX
+            curY = curY - unitY
+            collisionPointList.append((curX, curY))
+            unitY = -unitY
+
+        for ball in aimingBallList:
+            if distance(curX, curY, ball.cx, ball.cy) < ball.radius * 2:
+                collisionPointList.append((curX, curY))
+                collisionBallList.append(ball)
+                ballIndex = aimingBallList.index(ball)
+                aimingBallList.pop(ballIndex)
+                unitX = -(ball.cx - curX) / distance(curX, curY, ball.cx, ball.cy)
+                unitY = -(ball.cy - curY) / distance(curX, curY, ball.cx, ball.cy)
+
+    return (0, 20)
+
+
+# ========================================================================
 # Main functions (onAppStart, redrawAll, takeStep, onKeyPress)
 # ========================================================================
 
@@ -342,6 +430,7 @@ def initializeGamePlay(app):
     app.aiming = False
     app.holding = False
     app.moving = False
+    app.mode = None
     app.aimingDirection = [1, 1]
     app.hitForce = 0
 
@@ -425,8 +514,8 @@ def onMouseRelease(app, mouseX, mouseY):
         if clickChooseMode != None:
             app.mode = clickChooseMode(app, mouseX, mouseY)
 
-        if app.mode == "pvp":
-            app.hittingPlayer = 0
+        if app.mode == "pvp" or app.mode == "pvc":
+            app.hittingPlayer = 1
             app.hittingTarget = [None, None]
             app.pottedBall = []
             app.gameOver = False
@@ -491,8 +580,17 @@ def takeStep(app):
                 app.pottedBall = []
                 app.moving = False
                 app.aiming = True
-
-        if app.mode == "pvp":
+        
+        if app.mode == "pvc":
+            if app.aiming == True and app.hittingPlayer == 1:
+                app.aimingDirection, app.hitForce = findBestHit(app)
+                app.whiteBall.vx = - app.hitForce * app.aimingDirection[0]
+                app.whiteBall.vy = - app.hitForce * app.aimingDirection[1]
+                app.aiming = False
+                app.moving = True
+                app.hitForce = 0
+        
+        if app.mode == "pvp" or app.mode == "pvc":
             # Change hitting player and update winner
             # ================================================================
             # When all the balls stop moving, change game status based on potted balls.
@@ -600,25 +698,40 @@ def drawPlaying(app):
     drawLabel(f"Force: {app.hitForce}", app.width - 150, 130, size=25)
 
     if app.aiming == True:
-        drawCueStick(app, app.aimingDirection)
-        drawAimingLine(app, app.aimingDirection)
+        if app.mode == "pvp" or (app.mode == "pvc" and app.hittingPlayer == 0):
+            drawCueStick(app, app.aimingDirection)
+            drawAimingLine(app, app.aimingDirection)
 
-    if app.mode == "pvp":
-        drawLabel(
-            f"Player 1 Target: {app.hittingTarget[1]}", app.width - 150, 110, size=25
-        )
-        drawLabel(
-            f"Player 0 Target: {app.hittingTarget[0]}", app.width - 150, 90, size=25
-        )
-        drawLabel(f"Hitting Player: {app.hittingPlayer}", app.width - 150, 70, size=25)
+    if app.mode == "pvp" or app.mode == "pvc":
+        if app.mode == "pvc":
+            drawLabel(
+                f"Computer Target: {app.hittingTarget[1]}", app.width - 150, 110, size=25
+            )
+            drawLabel(
+                f"Player Target: {app.hittingTarget[0]}", app.width - 150, 90, size=25
+            )
+            hittingPlayer = "computer" if app.hittingPlayer == 1 else "player"
+            drawLabel(f"Hitting Player: {hittingPlayer}", app.width - 150, 70, size=25)
+
+        else:
+            drawLabel(
+                f"Player 1 Target: {app.hittingTarget[1]}", app.width - 150, 110, size=25
+            )
+            drawLabel(
+                f"Player 0 Target: {app.hittingTarget[0]}", app.width - 150, 90, size=25
+            )
+            drawLabel(f"Hitting Player: {app.hittingPlayer}", app.width - 150, 70, size=25)
 
 
 def drawEnding(app):
     if app.mode == "single":
-        msg = "WIN" if app.win == True else "LOSE"
-        drawLabel(msg, app.width/2, app.height/2, size=48)
+        message = "WIN" if app.win == True else "LOSE"
+        drawLabel(message, app.width/2, app.height/2, size=48)
     if app.mode == "pvp":
         drawLabel(f"PLAYER {app.winner} WINS", app.width/2, app.height/2, size=48)
+    if app.mode == "pvc":
+        winner = "COMPUTER" if app.winner == 1 else "PLAYER"
+        drawLabel(f"{winner} WINS", app.width/2, app.height/2, size=48)
 
 
 def main():
