@@ -706,7 +706,7 @@ def clickChooseMode(app, x, y):
 def drawPlaying(app):
     drawPoolTable(app)
     drawBalls(app)
-    drawLabel(f"Force: {app.hitForce}", app.width - 150, 130, size=25)
+    drawLabel(f"Force: {app.hitForce}", app.width - 150, 145, size=25)
 
     if app.aiming == True:
         if (
@@ -722,11 +722,11 @@ def drawPlaying(app):
             drawLabel(
                 f"Computer Target: {app.hittingTarget[1]}",
                 app.width - 150,
-                110,
+                120,
                 size=25,
             )
             drawLabel(
-                f"Player Target: {app.hittingTarget[0]}", app.width - 150, 90, size=25
+                f"Player Target: {app.hittingTarget[0]}", app.width - 150, 95, size=25
             )
             hittingPlayer = "computer" if app.hittingPlayer == 1 else "player"
             drawLabel(f"Hitting Player: {hittingPlayer}", app.width - 150, 70, size=25)
@@ -735,11 +735,11 @@ def drawPlaying(app):
             drawLabel(
                 f"Player 1 Target: {app.hittingTarget[1]}",
                 app.width - 150,
-                110,
+                120,
                 size=25,
             )
             drawLabel(
-                f"Player 0 Target: {app.hittingTarget[0]}", app.width - 150, 90, size=25
+                f"Player 0 Target: {app.hittingTarget[0]}", app.width - 150, 95, size=25
             )
             drawLabel(
                 f"Hitting Player: {app.hittingPlayer}", app.width - 150, 70, size=25
