@@ -378,6 +378,7 @@ def evaluateHit(app, aimingAngle):
         curX = curX - unitX
         curY = curY - unitY
 
+        # If the aiming line ends up in a pocket, it is a good hit
         if inPocket(app, curX, curY):
             if collisionBallList == [] or collisionBallList[-1].color == "black":
                 return (-200, 20)
